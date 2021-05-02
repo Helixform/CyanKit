@@ -9,7 +9,7 @@ fileprivate let textColor = PlatformColor(lightColor: #colorLiteral(red: 0.36862
 fileprivate let selectedTextColor = #colorLiteral(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0)
 fileprivate let selectedBackgroundColor = #colorLiteral(red: 0.1411764706, green: 0.4196078431, blue: 0.9921568627, alpha: 1)
 
-public struct SegmentedControl<SelectionValue, Content>: View where Content: RandomAccessCollection, Content.Element: SegmentControlItem, SelectionValue == Content.Element.ID {
+public struct SegmentedControl<SelectionValue, Content>: View where Content: RandomAccessCollection, Content.Element: SegmentedControlItem, SelectionValue == Content.Element.ID {
     
     private struct _FramePreference: PreferenceKey {
        
@@ -84,7 +84,7 @@ public struct SegmentedControl<SelectionValue, Content>: View where Content: Ran
     
 }
 
-public protocol SegmentControlItem: Identifiable {
+public protocol SegmentedControlItem: Identifiable {
     
     var text: String { get }
     
@@ -92,9 +92,9 @@ public protocol SegmentControlItem: Identifiable {
 
 // MARK: - Preview
 
-struct SegmentControl_Previews: PreviewProvider {
+struct SegmentedControl_Previews: PreviewProvider {
     
-    struct Item: SegmentControlItem {
+    struct Item: SegmentedControlItem {
         
         var id: Int
         var text: String
