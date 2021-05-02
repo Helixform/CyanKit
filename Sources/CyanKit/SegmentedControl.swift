@@ -9,7 +9,7 @@ fileprivate let textColor = PlatformColor(lightColor: #colorLiteral(red: 0.36862
 fileprivate let selectedTextColor = #colorLiteral(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0)
 fileprivate let selectedBackgroundColor = #colorLiteral(red: 0.1411764706, green: 0.4196078431, blue: 0.9921568627, alpha: 1)
 
-struct SegmentedControl<SelectionValue, Content>: View where Content: RandomAccessCollection, Content.Element: SegmentControlItem, SelectionValue == Content.Element.ID {
+public struct SegmentedControl<SelectionValue, Content>: View where Content: RandomAccessCollection, Content.Element: SegmentControlItem, SelectionValue == Content.Element.ID {
     
     private struct _FramePreference: PreferenceKey {
        
@@ -28,7 +28,7 @@ struct SegmentedControl<SelectionValue, Content>: View where Content: RandomAcce
     let selection: Binding<SelectionValue>
     let content: Content
     
-    init(selection: Binding<SelectionValue>, content: Content) {
+    public init(selection: Binding<SelectionValue>, content: Content) {
         self.content = content
         self.selection = selection
     }
@@ -49,7 +49,7 @@ struct SegmentedControl<SelectionValue, Content>: View where Content: RandomAcce
         }
     }
     
-    var body: some View {
+    public var body: some View {
         HStack {
             ForEach(content) { item in
                 Button(action: {

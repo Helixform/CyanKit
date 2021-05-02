@@ -5,13 +5,13 @@
 
 #if os(iOS)
 import UIKit
-typealias PlatformColor = UIColor
+public typealias PlatformColor = UIColor
 #else
 import AppKit
-typealias PlatformColor = NSColor
+public typealias PlatformColor = NSColor
 #endif
 
-extension PlatformColor {
+public extension PlatformColor {
     
     convenience init(lightColor: PlatformColor, darkColor: PlatformColor) {
 #if os(iOS)
