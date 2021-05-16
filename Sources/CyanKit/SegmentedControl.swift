@@ -7,7 +7,7 @@ import SwiftUI
 
 fileprivate let textColor = PlatformColor(lightColor: #colorLiteral(red: 0.368627451, green: 0.3843137255, blue: 0.4470588235, alpha: 1), darkColor: #colorLiteral(red: 0.5098039216, green: 0.5098039216, blue: 0.5333333333, alpha: 1))
 fileprivate let selectedTextColor = #colorLiteral(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0)
-fileprivate let selectedBackgroundColor = #colorLiteral(red: 0.1411764706, green: 0.4196078431, blue: 0.9921568627, alpha: 1)
+fileprivate let defaultSelectedBackgroundColor = PlatformColor.systemBlue // #colorLiteral(red: 0.1411764706, green: 0.4196078431, blue: 0.9921568627, alpha: 1)
 
 public struct SegmentedControl<SelectionValue, Content>: View where Content: RandomAccessCollection, Content.Element: SegmentedControlItem, SelectionValue == Content.Element.ID {
     
@@ -27,6 +27,8 @@ public struct SegmentedControl<SelectionValue, Content>: View where Content: Ran
     
     let selection: Binding<SelectionValue>
     let content: Content
+    
+    @Environment(\.selectedBackgroundColor) var selectedBackgroundColor: Color?
     
     public init(selection: Binding<SelectionValue>, content: Content) {
         self.content = content
@@ -78,7 +80,7 @@ public struct SegmentedControl<SelectionValue, Content>: View where Content: Ran
         }
         .compositingGroup()
         .backgroundPreferenceValue(_FramePreference.self) { value in
-            _backgroundView(with: value, color: Color(selectedBackgroundColor))
+            _backgroundView(with: value, color: selectedBackgroundColor ?? Color(defaultSelectedBackgroundColor))
         }
     }
     
@@ -88,6 +90,25 @@ public protocol SegmentedControlItem: Identifiable {
     
     var text: String { get }
     
+}
+
+public extension EnvironmentValues {
+    var selectedBackgroundColor: Color? {
+        get { self[_SelectedBackgroundColorEnvironmentKey.self] }
+        set { self[_SelectedBackgroundColorEnvironmentKey.self] = newValue }
+    }
+}
+
+public extension View {
+    
+    func selectedBackgroundColor(_ color: Color?) -> some View {
+        return environment(\.selectedBackgroundColor, color)
+    }
+    
+}
+
+fileprivate struct _SelectedBackgroundColorEnvironmentKey: EnvironmentKey {
+    static var defaultValue: Color? { nil }
 }
 
 // MARK: - Preview
@@ -114,6 +135,7 @@ struct SegmentedControl_Previews: PreviewProvider {
         var body: some View {
             VStack {
                 SegmentedControl(selection: $selection, content: content)
+                    .selectedBackgroundColor(Color(.orange))
             }
         }
         
