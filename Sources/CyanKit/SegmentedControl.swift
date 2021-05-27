@@ -27,12 +27,14 @@ public struct SegmentedControl<SelectionValue, Content>: View where Content: Ran
     
     let selection: Binding<SelectionValue>
     let content: Content
+    var scrollable: Bool
     
     @Environment(\.selectedBackgroundColor) var selectedBackgroundColor: Color?
     
-    public init(selection: Binding<SelectionValue>, content: Content) {
+    public init(selection: Binding<SelectionValue>, content: Content, scrollable: Bool = false) {
         self.content = content
         self.selection = selection
+        self.scrollable = scrollable
     }
     
     private func _backgroundView(with anchorInfo: _FramePreference.Value, color: Color = .black) -> some View {
@@ -52,41 +54,53 @@ public struct SegmentedControl<SelectionValue, Content>: View where Content: Ran
     }
     
     public var body: some View {
-        HStack {
-            ForEach(content) { item in
-                Button(action: {
-                    withAnimation(.interpolatingSpring(stiffness: 300.0, damping: 30)) {
-                        selection.wrappedValue = item.id
+        ScrollViewReader { proxy in
+            ScrollView(scrollable ? .horizontal : [], showsIndicators: false) {
+                HStack {
+                    ForEach(content) { item in
+                        Button(action: {
+                            withAnimation(.interpolatingSpring(stiffness: 300.0, damping: 30)) {
+                                selection.wrappedValue = item.id
+                            }
+                        }, label: {
+                            Text(item.text)
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundColor(Color(textColor))
+                                .frame(height: 24)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 4)
+                                .background(
+                                    Color.clear
+                                        .anchorPreference(key: _FramePreference.self,
+                                                          value: .bounds) { [item.id: $0] }
+                                )
+                        })
+                        .buttonStyle(BorderlessButtonStyle())
+                        .id(item.id)
                     }
-                }, label: {
-                    Text(item.text)
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(Color(textColor))
-                        .frame(height: 24)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 4)
-                        .background(
-                            Color.clear
-                                .anchorPreference(key: _FramePreference.self,
-                                                  value: .bounds) { [item.id: $0] }
-                        )
-                }).buttonStyle(BorderlessButtonStyle())
+                }
+                .onChange(of: selection.wrappedValue, perform: { value in
+                    withAnimation(.spring()) {
+                        proxy.scrollTo(value)
+                    }
+                })
+                .overlayPreferenceValue(_FramePreference.self) { value in
+                    _backgroundView(with: value, color: Color(selectedTextColor))
+                        .blendMode(.sourceAtop)
+                }
+                .compositingGroup()
+                .backgroundPreferenceValue(_FramePreference.self) { value in
+                    _backgroundView(with: value, color: selectedBackgroundColor ?? Color(defaultSelectedBackgroundColor))
+                }
             }
-        }
-        .overlayPreferenceValue(_FramePreference.self) { value in
-            _backgroundView(with: value, color: Color(selectedTextColor))
-                .blendMode(.sourceAtop)
-            
-        }
-        .compositingGroup()
-        .backgroundPreferenceValue(_FramePreference.self) { value in
-            _backgroundView(with: value, color: selectedBackgroundColor ?? Color(defaultSelectedBackgroundColor))
         }
     }
     
 }
 
 public protocol SegmentedControlItem: Identifiable {
+    
+    associatedtype ID = Hashable & Equatable
     
     var text: String { get }
     
@@ -117,6 +131,8 @@ struct SegmentedControl_Previews: PreviewProvider {
     
     struct Item: SegmentedControlItem {
         
+        typealias ID = Int
+        
         var id: Int
         var text: String
         
@@ -133,16 +149,13 @@ struct SegmentedControl_Previews: PreviewProvider {
         ]
         
         var body: some View {
-            VStack {
-                SegmentedControl(selection: $selection, content: content)
-                    .selectedBackgroundColor(Color(.orange))
-            }
+            SegmentedControl(selection: $selection, content: content, scrollable: true)
+                .selectedBackgroundColor(Color(.orange))
         }
         
     }
     
     static var previews: some View {
         PreviewView()
-            .preferredColorScheme(.dark)
     }
 }
