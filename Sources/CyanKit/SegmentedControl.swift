@@ -53,46 +53,65 @@ public struct SegmentedControl<SelectionValue, Content>: View where Content: Ran
         }
     }
     
-    public var body: some View {
-        ScrollViewReader { proxy in
-            ScrollView(scrollable ? .horizontal : [], showsIndicators: false) {
-                HStack {
-                    ForEach(content) { item in
-                        Button(action: {
-                            withAnimation(.interpolatingSpring(stiffness: 300.0, damping: 30)) {
-                                selection.wrappedValue = item.id
-                            }
-                        }, label: {
-                            Text(item.text)
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(Color(textColor))
-                                .frame(height: 24)
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 4)
-                                .background(
-                                    Color.clear
-                                        .anchorPreference(key: _FramePreference.self,
-                                                          value: .bounds) { [item.id: $0] }
-                                )
-                        })
-                        .buttonStyle(BorderlessButtonStyle())
-                        .id(item.id)
-                    }
-                }
-                .onChange(of: selection.wrappedValue, perform: { value in
-                    withAnimation(.spring()) {
-                        proxy.scrollTo(value)
-                    }
-                })
-                .overlayPreferenceValue(_FramePreference.self) { value in
-                    _backgroundView(with: value, color: Color(selectedTextColor))
-                        .blendMode(.sourceAtop)
-                }
-                .compositingGroup()
-                .backgroundPreferenceValue(_FramePreference.self) { value in
-                    _backgroundView(with: value, color: selectedBackgroundColor ?? Color(defaultSelectedBackgroundColor))
+    @State private var scrollToID: ((SelectionValue) -> Void)? = nil
+    
+    private var contentView: some View {
+        HStack {
+            HStack {
+                ForEach(content) { item in
+                    Button(action: {
+                        withAnimation(.interpolatingSpring(stiffness: 300.0, damping: 30)) {
+                            selection.wrappedValue = item.id
+                        }
+                    }, label: {
+                        Text(item.text)
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(Color(textColor))
+                            .frame(height: 24)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 4)
+                            .background(
+                                Color.clear
+                                    .anchorPreference(key: _FramePreference.self,
+                                                      value: .bounds) { [item.id: $0] }
+                            )
+                    })
+                    .buttonStyle(BorderlessButtonStyle())
+                    .id(item.id)
                 }
             }
+            .onChange(of: selection.wrappedValue, perform: { value in
+                withAnimation(.spring()) {
+                    scrollToID?(value)
+                }
+            })
+            .overlayPreferenceValue(_FramePreference.self) { value in
+                _backgroundView(with: value, color: Color(selectedTextColor))
+                    .blendMode(.sourceAtop)
+            }
+            .compositingGroup()
+            .backgroundPreferenceValue(_FramePreference.self) { value in
+                _backgroundView(with: value, color: selectedBackgroundColor ?? Color(defaultSelectedBackgroundColor))
+            }
+            .padding(.horizontal)
+            if !scrollable { Spacer() }
+        }
+    }
+    
+    public var body: some View {
+        if scrollable {
+            ScrollViewReader { proxy in
+                ScrollView(scrollable ? .horizontal : [], showsIndicators: false) {
+                    contentView
+                }
+                .onAppear {
+                    scrollToID = { value in
+                        proxy.scrollTo(value)
+                    }
+                }
+            }
+        } else {
+            contentView
         }
     }
     
