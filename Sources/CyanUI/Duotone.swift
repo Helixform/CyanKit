@@ -32,7 +32,7 @@ public struct IconColorConfiguration {
 @available(iOS 15.0, macOS 12.0, *)
 public struct IconColorConfigurationKey: EnvironmentKey {
     public static var defaultValue: IconColorConfiguration? {
-        .init(primaryColor: .init(lightColor: .init(red: 0.5019607843, green: 0.5490196078, blue: 0.6392156863, alpha: 1), darkColor: .init(red: 1, green: 1, blue: 1, alpha: 1)),
+        .init(primaryColor: .init(lightColor: .label, darkColor: .white),
               secondaryColor: .white.opacity(0.5))
     }
 }
