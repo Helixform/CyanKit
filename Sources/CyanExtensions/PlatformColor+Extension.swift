@@ -13,6 +13,12 @@ public typealias PlatformColor = NSColor
 
 public extension PlatformColor {
     
+    #if os(macOS)
+    static var label: PlatformColor {
+        return .labelColor
+    }
+    #endif
+    
     convenience init(lightColor: PlatformColor, darkColor: PlatformColor) {
 #if os(iOS)
         self.init(dynamicProvider: { traitCollection in

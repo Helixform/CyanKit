@@ -122,7 +122,7 @@ public struct RoundedBorderedButtonStyle: ButtonStyle {
     private let cornerRadius: CGFloat
     private let borderColor: Color
     
-    public init(lineWidth: CGFloat = 1, cornerRadius: CGFloat = 12, borderColor: Color = Color(platformColor: .labelColor)) {
+    public init(lineWidth: CGFloat = 1, cornerRadius: CGFloat = 12, borderColor: Color = Color(platformColor: .label)) {
         self.lineWidth = lineWidth
         self.cornerRadius = cornerRadius
         self.borderColor = borderColor
