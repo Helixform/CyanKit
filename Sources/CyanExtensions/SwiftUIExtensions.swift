@@ -2,7 +2,7 @@ import SwiftUI
 
 public struct ContinuousCapsule: Shape {
     
-    public init() {}
+    public init() { }
     
     public func path(in rect: CGRect) -> Path {
         RoundedRectangle(
