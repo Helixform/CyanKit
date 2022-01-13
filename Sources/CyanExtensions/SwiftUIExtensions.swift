@@ -41,7 +41,13 @@ public extension View {
     
     func hideListRowSeparator() -> some View {
         #if os(iOS)
-        listRowSeparator(.hidden)
+        Group {
+            if #available(iOS 15.0, *) {
+                listRowSeparator(.hidden)
+            } else {
+                self
+            }
+        }
         #else
         self
         #endif
