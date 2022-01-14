@@ -7,6 +7,8 @@ import Foundation
 import CoreGraphics
 
 infix operator |> : MultiplicationPrecedence
+
+@discardableResult
 public func |><T, U>(_ lhs: T, _ rhs: (T) -> U) -> U {
     rhs(lhs)
 }
