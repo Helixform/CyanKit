@@ -14,19 +14,25 @@ struct _PopupList<Content>: View where Content: StringProtocol {
     @Binding var selection: Content?
     
     @State private var highlighted: Content?
+    @State private var isAnimatedIn = false
     
     private let mouseUpEventPublisher: AnyPublisher<NSPoint, Never>
     
     init(contents: [Content], selection: Binding<Content?>, mouseUpEventPublisher: AnyPublisher<NSPoint, Never>) {
+        _selection = selection
+        self.mouseUpEventPublisher = mouseUpEventPublisher
         self.contents = contents.enumerated().filter { index, element in
             contents.firstIndex(of: element) == index
         }.map { $0.element }
-        _selection = selection
-        self.mouseUpEventPublisher = mouseUpEventPublisher
     }
     
     var body: some View {
         VStack(spacing: 0) {
+            if contents.isEmpty {
+                Rectangle()
+                    .foregroundColor(.clear)
+                    .frame(height: 28)
+            }
             ForEach(contents, id: \.self) { item in
                 ZStack {
                     Color(nsColor: .labelColor)
@@ -62,7 +68,14 @@ struct _PopupList<Content>: View where Content: StringProtocol {
         }
         .cornerRadius(12)
         .shadow(color: .black.opacity(0.12), radius: 10)
-        .padding()
+        .padding(16)
+        .scaleEffect(isAnimatedIn ? 1 : 0.5, anchor: .center)
+        .opacity(isAnimatedIn ? 1 : 0)
+        .onAppear {
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                isAnimatedIn = true
+            }
+        }
     }
     
 }
@@ -134,13 +147,11 @@ final class _PopupItemView<S>: NSView where S: StringProtocol {
         }
     }
     
+    /// Updates the selected item of the menu according to the position of the mouse click.
+    /// - Parameter mousePoint: The position where the mouse event is triggered.
     func updateSelection(with mousePoint: NSPoint) {
-        if let windowContentBounds = window?.contentView?.bounds {
-            var itemFrame = convert(frame, to: window?.contentView)
-            itemFrame.origin.y = windowContentBounds.height - itemFrame.minY - itemFrame.height
-            if window?.convertToScreen(itemFrame).contains(mousePoint) == true {
-                selection = itemTag
-            }
+        if window?.convertToScreen(convert(frame, to: nil)).contains(mousePoint) == true {
+            selection = itemTag
         }
     }
     
