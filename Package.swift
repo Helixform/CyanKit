@@ -14,7 +14,7 @@ let package = Package(
     targets: [
         .target(name: "CyanExtensions"),
         .target(name: "CyanUtils"),
-        .target(name: "CyanUI", dependencies: ["CyanExtensions"]),
+        .target(name: "CyanUI", dependencies: ["CyanExtensions", "CyanUtils"]),
         .target(
             name: "CyanKit",
             dependencies: [

@@ -5,22 +5,7 @@
 
 import SwiftUI
 
-// MARK: Continuous Capsule
-
-public struct ContinuousCapsule: Shape {
-    
-    public init() { }
-    
-    public func path(in rect: CGRect) -> Path {
-        RoundedRectangle(
-            cornerRadius: min(rect.width, rect.height) / 2,
-            style: .continuous
-        ).path(in: rect)
-    }
-    
-}
-
-// MARK: - Color
+// MARK: Color
 
 public extension Color {
     
