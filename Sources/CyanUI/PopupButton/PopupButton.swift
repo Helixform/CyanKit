@@ -159,8 +159,10 @@ class _PopupButtonTriggerView<S>: NSView where S: StringProtocol {
     }
     
     deinit {
-        if let localMonitor = localMonitor, let globalMonitor = globalMonitor {
+        if let localMonitor = localMonitor {
             NSEvent.removeMonitor(localMonitor)
+        }
+        if let globalMonitor = globalMonitor {
             NSEvent.removeMonitor(globalMonitor)
         }
     }

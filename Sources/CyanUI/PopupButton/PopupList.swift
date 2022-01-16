@@ -21,6 +21,8 @@ struct _PopupList<Content>: View where Content: StringProtocol {
     init(contents: [Content], selection: Binding<Content?>, mouseUpEventPublisher: AnyPublisher<NSPoint, Never>) {
         _selection = selection
         self.mouseUpEventPublisher = mouseUpEventPublisher
+        
+        // TODO: Optimize the handling of duplicated items.
         self.contents = contents.enumerated().filter { index, element in
             contents.firstIndex(of: element) == index
         }.map { $0.element }
