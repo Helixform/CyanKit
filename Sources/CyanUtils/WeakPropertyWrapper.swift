@@ -7,15 +7,10 @@ import Foundation
 
 @propertyWrapper public class Weak<T> where T: AnyObject {
     
-    private weak var _wrappedValue: T?
-    
-    public var wrappedValue: T? {
-        get { _wrappedValue }
-        set { _wrappedValue = newValue }
-    }
+    public weak var wrappedValue: T?
     
     public init(wrappedValue: T?) {
-        _wrappedValue = wrappedValue
+        self.wrappedValue = wrappedValue
     }
     
 }

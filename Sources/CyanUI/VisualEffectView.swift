@@ -22,14 +22,12 @@ public struct VisualEffectView: NSViewRepresentable {
         self.blendingMode = blendingMode
     }
     
-    public func makeNSView(context: Context) -> NSVisualEffectView {
-        let effectView = NSVisualEffectView()
-        effectView.state = state
-        effectView.blendingMode = blendingMode
-        effectView.material = material
-        return effectView
-    }
+    public func makeNSView(context: Context) -> NSVisualEffectView { .init() }
     
-    public func updateNSView(_ nsView: NSVisualEffectView, context: Context) { }
+    public func updateNSView(_ nsView: NSVisualEffectView, context: Context) {
+        nsView.state = state
+        nsView.blendingMode = blendingMode
+        nsView.material = material
+    }
     
 }
