@@ -145,7 +145,7 @@ class _PopupButtonTriggerView<S>: NSView where S: StringProtocol {
             if popupWindow == nil { return }
             let currentMouseLocation = NSEvent.mouseLocation
             if let presentedPoint = presentedPoint {
-                if !presentedPoint.equalTo(currentMouseLocation) {
+                if !presentedPoint.nearBy(currentMouseLocation) {
                     removePopupWindow()
                 } else { return }
             } else {
