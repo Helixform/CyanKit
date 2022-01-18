@@ -26,14 +26,18 @@ public struct DuotoneIconConfiguration {
 @available(iOS 15.0, macOS 12.0, *)
 public struct IconColorConfiguration {
     public let primaryColor: Color
+    public let highlightPrimaryColor: Color
     public let secondaryColor: Color
+    public let highlightSecondaryColor: Color
 }
 
 @available(iOS 15.0, macOS 12.0, *)
 public struct IconColorConfigurationKey: EnvironmentKey {
     public static var defaultValue: IconColorConfiguration? {
-        .init(primaryColor: .init(lightColor: .label, darkColor: .white),
-              secondaryColor: .white.opacity(0.5))
+        let primaryColor: Color = .init(lightColor: .label, darkColor: .white)
+        let secondaryColor: Color = .white.opacity(0.5)
+        return .init(primaryColor: primaryColor, highlightPrimaryColor: primaryColor,
+                     secondaryColor: secondaryColor, highlightSecondaryColor: secondaryColor)
     }
 }
 
@@ -62,8 +66,9 @@ public struct DuotoneIcon<S>: View where S: DuotoneIconStyle {
     public var body: some View {
         Canvas { context, size in
             context.drawLayer { context in
-                if let secondaryColor = iconColorConfiguration?.secondaryColor {
-                    context.fill(.init(.init(origin: .zero, size: size)), with: .color(secondaryColor))
+                if let secondaryColor = iconColorConfiguration?.secondaryColor,
+                   let hightlightSecondaryColor = iconColorConfiguration?.highlightSecondaryColor {
+                    context.fill(.init(.init(origin: .zero, size: size)), with: .color(isHighlighted ? hightlightSecondaryColor : secondaryColor))
                     context.blendMode = .destinationIn
                 }
                 context.drawLayer { context in
@@ -71,8 +76,9 @@ public struct DuotoneIcon<S>: View where S: DuotoneIconStyle {
                 }
             }
             context.drawLayer { context in
-                if let primaryColor = iconColorConfiguration?.primaryColor {
-                    context.fill(.init(.init(origin: .zero, size: size)), with: .color(primaryColor))
+                if let primaryColor = iconColorConfiguration?.primaryColor,
+                   let hightlightPrimaryColor = iconColorConfiguration?.highlightPrimaryColor {
+                    context.fill(.init(.init(origin: .zero, size: size)), with: .color(isHighlighted ? hightlightPrimaryColor : primaryColor))
                     context.blendMode = .destinationIn
                 }
                 context.drawLayer { context in
