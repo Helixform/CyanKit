@@ -4,6 +4,7 @@
 // 
 
 import SwiftUI
+import CyanExtensions
 
 @available(iOS 15.0, macOS 12.0, *)
 public protocol DuotoneIconStyle {
@@ -29,6 +30,20 @@ public struct IconColorConfiguration {
     public let highlightPrimaryColor: Color
     public let secondaryColor: Color
     public let highlightSecondaryColor: Color
+    
+    public init(primaryColor: Color, highlightPrimaryColor: Color, secondaryColor: Color, highlightSecondaryColor: Color) {
+        self.primaryColor = primaryColor
+        self.highlightPrimaryColor = highlightPrimaryColor
+        self.secondaryColor = secondaryColor
+        self.highlightSecondaryColor = highlightSecondaryColor
+    }
+    
+    public init(primaryColor: PlatformColor, highlightPrimaryColor: PlatformColor, secondaryColor: PlatformColor, highlightSecondaryColor: PlatformColor) {
+        self.init(primaryColor: .init(platformColor: primaryColor),
+                  highlightPrimaryColor: .init(platformColor: highlightPrimaryColor),
+                  secondaryColor: .init(platformColor: secondaryColor),
+                  highlightSecondaryColor: .init(platformColor: highlightSecondaryColor))
+    }
 }
 
 @available(iOS 15.0, macOS 12.0, *)
@@ -56,11 +71,11 @@ public struct DuotoneIcon<S>: View where S: DuotoneIconStyle {
     
     private let style: S
     
-    @Binding private var isHighlighted: Bool
+    private let isHighlighted: Bool
     
-    public init(_ style: S, isHighlighted: Binding<Bool>) {
+    public init(_ style: S, isHighlighted: Bool) {
         self.style = style
-        _isHighlighted = isHighlighted
+        self.isHighlighted = isHighlighted
     }
     
     public var body: some View {
