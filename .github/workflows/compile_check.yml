@@ -1,0 +1,18 @@
+on:
+  push:
+    branches: [ main, beta ]
+  pull_request:
+    branches: [ main, beta ]
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v2
+    - run: swift build -v
+  build-ios:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v2
+    - run: swift build -Xswiftc "-sdk" -Xswiftc "`xcrun --sdk iphoneos --show-sdk-path`" -Xswiftc "-target" -Xswiftc "arm64-apple-ios15.0" -v
+
