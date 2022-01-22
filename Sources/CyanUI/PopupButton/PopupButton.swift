@@ -3,6 +3,8 @@
 //  Copyright (c) 2022 ktiays. All rights reserved.
 // 
 
+#if os(macOS)
+
 import SwiftUI
 import AppKit
 import ObjectiveC
@@ -235,3 +237,5 @@ class _PopupButtonTriggerView<S>: NSView where S: StringProtocol {
     }
     
 }
+
+#endif

@@ -3,6 +3,8 @@
 //  Copyright (c) 2022 ktiays. All rights reserved.
 // 
 
+#if os(macOS)
+
 import SwiftUI
 import Combine
 import CyanExtensions
@@ -158,3 +160,5 @@ final class _PopupItemView<S>: NSView where S: StringProtocol {
     }
     
 }
+
+#endif
