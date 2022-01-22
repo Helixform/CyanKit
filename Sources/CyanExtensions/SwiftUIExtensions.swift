@@ -65,6 +65,7 @@ public extension Color {
     static let systemCyan: Color = .init(platformColor: .systemCyan)
     
     /// A context-dependent mint color that automatically adapts to the current trait environment.
+    @available(iOS 15.0, macOS 12.0, *)
     static let systemMint: Color = .init(platformColor: .systemMint)
     
     /// A context-dependent gray color that automatically adapts to the current trait environment.

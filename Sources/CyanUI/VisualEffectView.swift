@@ -3,6 +3,8 @@
 //  Copyright (c) 2022 ktiays. All rights reserved.
 // 
 
+#if os(macOS)
+
 import SwiftUI
 
 @available(macOS 11.0, *)
@@ -31,3 +33,5 @@ public struct VisualEffectView: NSViewRepresentable {
     }
     
 }
+
+#endif
