@@ -75,35 +75,15 @@ public struct BeautifulButton: View {
                     }
                 }
             )
-            .overlay(
-                GeometryReader { proxy in
-                    Color(white: 0, opacity: (pressed && style == .fill) ? 0.3 : 0)
-                        .onChange(of: proxy.size) { newValue in
-                            buttonSize = proxy.size
-                        }
-                        .onAppear {
-                            buttonSize = proxy.size
-                        }
+            .animatedClickable(configuration: .empty(
+                activeAnimation: .spring(response: 0.2),
+                identityAnimation: .spring(response: 0.35)
+            ).combined(with: { active in
+                AnyViewModifier {
+                    $0.overlay(Color(white: 0, opacity: active && style == .fill ? 0.3 : 0))
+                        .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
                 }
-            )
-            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-            .scaleEffect(scaleRatio, anchor: .center)
-            .highPriorityGesture(
-                DragGesture(minimumDistance: 0)
-                    .onChanged({ value in
-                        withAnimation(.spring(response: 0.2)) {
-                            pressed = CGRect(origin: .zero, size: buttonSize).contains(value.location)
-                        }
-                    })
-                    .onEnded({ value in
-                        if pressed {
-                            action()
-                        }
-                        withAnimation(.spring(response: 0.35)) {
-                            pressed = false
-                        }
-                    })
-            )
+            }).activeScale(0.9), action: action)
     }
     
     public func buttonStyle(_ style: Style) -> BeautifulButton {
