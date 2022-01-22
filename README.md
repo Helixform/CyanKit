@@ -1,5 +1,7 @@
 # CyanKit
 
+[![.github/workflows/compile_check.yml](https://github.com/IcyStudio/CyanKit/actions/workflows/compile_check.yml/badge.svg?branch=main)](https://github.com/IcyStudio/CyanKit/actions/workflows/compile_check.yml)
+
 CyanKit is a cross-platform package that contains something we feel useful for app development. Most components may only be suitable for our private use.
 
 ## Structure
