@@ -4,6 +4,7 @@
 // 
 
 import SwiftUI
+
 #if os(macOS)
 import AppKit
 typealias ViewRepresentable = NSViewRepresentable
@@ -12,52 +13,62 @@ import UIKit
 typealias ViewRepresentable = UIViewRepresentable
 #endif
 
-struct HostingViewReader<Content>: ViewRepresentable where Content: View {
+public struct HostingViewReader<Content>: ViewRepresentable where Content: View {
     
     #if os(macOS)
+    public typealias PlatformView = NSView
     
-    typealias PlatformView = NSView
-    typealias PlatformHostingView = NSHostingView
-    
-    func makeNSView(context: Context) -> _HostingView {
-        .init(content: self.contentBuilder)
+    public func makeNSView(context: Context) -> _HostingViewWrapper {
+        .init(frame: .zero)
     }
     
-    func updateNSView(_ nsView: _HostingView, context: Context) { }
-    
+    public func updateNSView(_ nsView: _HostingViewWrapper, context: Context) {
+        nsView.hostingView.rootView = self.contentBuilder(nsView)
+    }
     #else
+    public typealias PlatformView = UIView
     
-    typealias PlatformView = UIView
-    typealias PlatformHostingView = _UIHostingView
-    
-    func makeUIView(context: Context) -> _HostingView {
-        .init(content: self.contentBuilder)
+    public func makeUIView(context: Context) -> _HostingViewWrapper {
+        .init(frame: .zero)
     }
     
-    func updateUIView(_ uiView: _HostingView, context: Context) { }
-    
+    public func updateUIView(_ uiView: _HostingViewWrapper, context: Context) {
+        uiView.hostingViewController.rootView = self.contentBuilder(uiView)
+    }
     #endif
     
     private let contentBuilder: (PlatformView) -> Content
-
     
-    init(@ViewBuilder content: @escaping (PlatformView) -> Content) {
+    public init(@ViewBuilder content: @escaping (PlatformView) -> Content) {
         self.contentBuilder = content
     }
     
-    final class _HostingView: PlatformView {
+    public final class _HostingViewWrapper: PlatformView {
         
-        private var contentView: Content!
+        #if os(macOS)
+        fileprivate let hostingView: NSHostingView<Content?>
+        #else
+        fileprivate let hostingViewController: UIHostingController<Content?>
+        #endif
         
-        fileprivate init(@ViewBuilder content: (PlatformView) -> Content) {
-            super.init(frame: .zero)
-            self.contentView = content(self)
-
-            let hostingContentView = PlatformHostingView(rootView: self.contentView)
-            addSubview(hostingContentView)
-            hostingContentView.snp.makeConstraints { make in
-                make.edges.equalToSuperview()
-            }
+        override init(frame: CGRect) {
+            #if os(macOS)
+            hostingView = .init(rootView: nil)
+            #else
+            hostingViewController = .init(rootView: nil)
+            let hostingView = hostingViewController.view!
+            #endif
+            hostingView.translatesAutoresizingMaskIntoConstraints = false
+            
+            super.init(frame: frame)
+            
+            addSubview(hostingView)
+            NSLayoutConstraint.activate([
+                hostingView.leadingAnchor.constraint(equalTo: self.leadingAnchor),
+                hostingView.trailingAnchor.constraint(equalTo: self.trailingAnchor),
+                hostingView.topAnchor.constraint(equalTo: self.topAnchor),
+                hostingView.bottomAnchor.constraint(equalTo: self.bottomAnchor),
+            ])
         }
         
         required init?(coder: NSCoder) {
