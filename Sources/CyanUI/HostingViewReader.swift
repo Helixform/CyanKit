@@ -56,7 +56,7 @@ public struct HostingViewReader<Content>: ViewRepresentable where Content: View 
             hostingView = .init(rootView: nil)
             #else
             hostingViewController = .init(rootView: nil)
-            let hostingView = hostingViewController.view!
+            let hostingView: UIView = hostingViewController.view
             #endif
             hostingView.translatesAutoresizingMaskIntoConstraints = false
             
