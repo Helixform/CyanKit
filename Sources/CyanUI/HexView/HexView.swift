@@ -7,6 +7,16 @@
 
 import Cocoa
 
+/// A set of optional methods that hex view delegates can use to
+/// manage selection, and more.
+@objc public protocol HexViewDelegate: NSObjectProtocol {
+    
+    /// Tells the delegate when the selection has changed in the hex view.
+    @objc optional func selectionDidChangeInHexView(_ view: HexView)
+    
+}
+
+/// A view that allows inspecting large data in hex view.
 public class HexView: NSView {
     
     public override var isFlipped: Bool {
@@ -35,10 +45,35 @@ public class HexView: NSView {
     private var isMouseDragging = false
     private var cursorBlinkState = false
     
+    /// The data provider of the receiver’s content.
     public var dataProvider: HexViewDataProvider? {
         didSet {
             reloadData()
         }
+    }
+    
+    /// The receiver’s delegate.
+    public weak var delegate: HexViewDelegate?
+    
+    /// The range of bytes selected in the receiver.
+    public var selectedRange: NSRange? {
+        // No selections and inserting points.
+        guard let visualSelectionEnd = visualSelectionEnd else {
+            return nil
+        }
+        
+        // Has inserting points but no selections.
+        var dataSelectionEnd = drawingHelper.dataIndex(at: visualSelectionEnd)
+        guard let visualSelectionStart = visualSelectionStart else {
+            return .init(location: dataSelectionEnd, length: 1)
+        }
+        
+        // Has selections.
+        let selectionEnd = max(visualSelectionEnd, visualSelectionStart)
+        let selectionStart = min(visualSelectionEnd, visualSelectionStart)
+        dataSelectionEnd = drawingHelper.dataIndex(at: selectionEnd)
+        let dataSelectionStart = drawingHelper.dataIndex(at: selectionStart)
+        return .init(location: dataSelectionStart, length: dataSelectionEnd - dataSelectionStart + 1)
     }
     
     deinit {
@@ -96,7 +131,6 @@ public class HexView: NSView {
         }
         
         // Gather drawing informations.
-        let gutterWidth = drawingHelper.gutterWidth
         let lineHeight = drawingHelper.lineHeight
         let charWidth = drawingHelper.charWidth
         
@@ -188,6 +222,8 @@ public class HexView: NSView {
             
             setNeedsDisplay(viewportBounds)
             startCursorBlinking()
+            
+            delegate?.selectionDidChangeInHexView?(self)
         }
     }
     
@@ -204,10 +240,16 @@ public class HexView: NSView {
         
         let point = convert(event.locationInWindow, from: nil)
         if let hitComponent = drawingHelper.hitTest(at: point) {
-            visualSelectionEnd = clampCursorPosition(hitComponent.1)
+            let hitPosition = clampCursorPosition(hitComponent.1)
+            guard hitPosition != visualSelectionEnd else {
+                return
+            }
+            visualSelectionEnd = hitPosition
             componentUnderCursor = hitComponent.0
             
             setNeedsDisplay(viewportBounds)
+            
+            delegate?.selectionDidChangeInHexView?(self)
         }
     }
     
@@ -256,7 +298,6 @@ public class HexView: NSView {
         }
         
         let lineHeight = drawingHelper.lineHeight
-        let gutterWidth = drawingHelper.gutterWidth
         let viewportBounds = self.viewportBounds
         
         func addLineLayer(for line: Int, forwards: Bool = true) {

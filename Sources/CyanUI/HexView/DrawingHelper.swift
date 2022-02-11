@@ -24,7 +24,7 @@ class HexViewDrawingHelper {
         }
     }
     
-    struct Position: Comparable {
+    struct Position: Comparable, Equatable {
         let line: Int
         let column: Int
         
@@ -196,7 +196,7 @@ class HexViewDrawingHelper {
         
         // Octets area:
         var startX = gutterWidth
-        var endX = origin(of: .ascii, at: .init(line: 0, column: 0)).x
+        let endX = origin(of: .ascii, at: .init(line: 0, column: 0)).x
         if pointX < endX {
             let column = min(max(Int(floor((pointX - startX) / (charWidth * 3))), 0), octetsPerLine - 1)
             return (.hex, .init(line: line, column: column))
@@ -239,9 +239,6 @@ class _HexViewComponentLineLayer: CALayer {
     private func commomInit() {
         let charWidth = drawingHelper.charWidth
         let lineHeight = drawingHelper.lineHeight
-        let font = drawingHelper.font!
-        let fontSize = font.pointSize
-        let screenScale = NSScreen.main?.backingScaleFactor ?? 2
         
         // Populate components.
         var currentComponentWidth = charWidth * 2
