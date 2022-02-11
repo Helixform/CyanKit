@@ -3,6 +3,8 @@
 //  Copyright © 2022 Cyandev. All rights reserved.
 //
 
+#if os(macOS)
+
 import Cocoa
 import CoreGraphics
 
@@ -298,3 +300,5 @@ fileprivate class _HexViewComponentLayer: CALayer {
     }
     
 }
+
+#endif
