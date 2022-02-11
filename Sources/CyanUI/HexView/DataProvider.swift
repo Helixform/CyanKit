@@ -20,7 +20,18 @@ public protocol HexViewDataProvider {
 /// A simple data provider implementation that use `Data` as backing store.
 public struct HexViewDirectDataProvider: HexViewDataProvider {
     
-    let data: Data
+    public let data: Data
+    
+    public init?(contentsOf url: URL) {
+        guard let data = try? Data(contentsOf: url) else {
+            return nil
+        }
+        self.init(data: data)
+    }
+    
+    public init(data: Data) {
+        self.data = data
+    }
     
     public var length: Int {
         return data.count

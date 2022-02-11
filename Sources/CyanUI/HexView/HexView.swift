@@ -26,14 +26,14 @@ public class HexView: NSView {
     
     private var drawingHelper = HexViewDrawingHelper()
     private weak var cursorBlinkTimer: Timer?
+    private var lineLayers = [_HexViewComponentLineLayer]()
+    private var recyclePool = [_HexViewComponentLineLayer]()
     
     private var visualSelectionStart: HexViewDrawingHelper.Position?
     private var visualSelectionEnd: HexViewDrawingHelper.Position?
     private var componentUnderCursor: HexViewDrawingHelper.ComponentType = .hex
     private var isMouseDragging = false
     private var cursorBlinkState = false
-    
-    private var specialCharacterColor = NSColor.systemRed.withAlphaComponent(0.5)
     
     public var dataProvider: HexViewDataProvider? {
         didSet {
@@ -56,6 +56,8 @@ public class HexView: NSView {
     }
     
     private func commonInit() {
+        wantsLayer = true
+        
         drawingHelper.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
         drawingHelper.selectionFillColor = NSColor.selectedTextBackgroundColor.withAlphaComponent(0.4)
         drawingHelper.selectionStrokeColor = NSColor.selectedTextBackgroundColor
@@ -73,9 +75,7 @@ public class HexView: NSView {
     public override func viewDidMoveToSuperview() {
         super.viewDidMoveToSuperview()
         
-        if let scrollView = (superview as? NSClipView)?.enclosingScrollView {
-            scrollView.scroll(.zero)
-        }
+        enclosingScrollView?.scroll(.zero)
     }
     
     public override func layout() {
@@ -117,23 +117,24 @@ public class HexView: NSView {
         
         // Draw selections.
         if let visualSelectionStart = self.visualSelectionStart, let visualSelectionEnd = self.visualSelectionEnd {
-            let widthOfHexArea =
-                charWidth * CGFloat(type(of: drawingHelper).numberOfLineCharacters(for: octetsPerLine))
-            let gapBetweenAreas = charWidth * 2
-            
+            let hexLineStartOrigin = drawingHelper.origin(of: .hex, at: .init(line: 0, column: 0))
+            let hexLineEndOrigin = drawingHelper.origin(of: .hex, at: .init(line: 0, column: octetsPerLine))
             drawingHelper.drawSelection(
                 from: drawingHelper.origin(of: .hex, at: min(visualSelectionStart, visualSelectionEnd)),
                 to: drawingHelper.origin(of: .hex, at: max(visualSelectionStart, visualSelectionEnd)),
                 stride: 2,
-                drawingBounds: .init(x: gutterWidth, y: 0, width: widthOfHexArea, height: viewportBounds.height),
+                drawingBounds: .init(x: hexLineStartOrigin.x, y: 0,
+                                     width: hexLineEndOrigin.x - hexLineStartOrigin.x,
+                                     height: viewportBounds.height),
                 in: context
             )
             
+            let asciiLineStartOrigin = drawingHelper.origin(of: .ascii, at: .init(line: 0, column: 0))
             drawingHelper.drawSelection(
                 from: drawingHelper.origin(of: .ascii, at: min(visualSelectionStart, visualSelectionEnd)),
                 to: drawingHelper.origin(of: .ascii, at: max(visualSelectionStart, visualSelectionEnd)),
                 stride: 1,
-                drawingBounds: .init(x: gutterWidth + widthOfHexArea + gapBetweenAreas, y: 0,
+                drawingBounds: .init(x: asciiLineStartOrigin.x, y: 0,
                                      width: charWidth * CGFloat(octetsPerLine), height: viewportBounds.height),
                 in: context
             )
@@ -151,12 +152,9 @@ public class HexView: NSView {
             cursorPath.stroke()
         }
         
-        // Draw lines.
+        // Draw address gutter.
         let charVerticalAdjust = -drawingHelper.charDrawingOriginY + (lineHeight - drawingHelper.charHeight) / 2
         for i in lowerBounds..<min(upperBounds, totalLines) {
-            let lineContent = content(for: i)
-            lineContent.draw(at: .init(x: gutterWidth, y: CGFloat(i) * lineHeight + charVerticalAdjust))
-            
             let address = String(hexStringWith: i * octetsPerLine, uppercase: true, paddingTo: 8)
             (address as NSString).draw(
                 at: .init(x: 4, y: CGFloat(i) * lineHeight + charVerticalAdjust),
@@ -166,6 +164,18 @@ public class HexView: NSView {
                 ]
             )
         }
+        
+        // Draw double-word separator.
+        for i in 0..<(octetsPerLine / 4 - 1) {
+            let x = drawingHelper.origin(of: .hex, at: .init(line: 0, column: 4 * (i + 1))).x - charWidth / 2
+            context.move(to: .init(x: x, y: viewportBounds.minY))
+            context.addLine(to: .init(x: x, y: viewportBounds.maxY))
+        }
+        context.setStrokeColor(NSColor.textColor.withAlphaComponent(0.2).cgColor)
+        context.strokePath()
+        
+        // Finally, arrange the content lines.
+        layoutLines(from: lowerBounds, to: upperBounds)
     }
     
     public override func mouseDown(with event: NSEvent) {
@@ -219,58 +229,76 @@ public class HexView: NSView {
         setNeedsDisplay(viewportBounds)
     }
     
-    private func content(for line: Int) -> NSAttributedString {
-        guard let dataProvider = self.dataProvider else {
-            return .init()
+    private func layoutLines(from fromLine: Int, to toLine: Int) {
+        // Make sure the line array is ordered.
+        lineLayers.sort { lhs, rhs in
+            return lhs.representingLine < rhs.representingLine
         }
         
-        let length = dataProvider.length
-        let start = drawingHelper.dataIndex(at: .init(line: line, column: 0))
-        let end = drawingHelper.dataIndex(at: .init(line: line, column: drawingHelper.octetsPerLine - 1))
-        
-        var specialIndexes = IndexSet()
-        let line = NSMutableAttributedString()
-        for i in start...min(length - 1, end) {
-            let byte = dataProvider.byte(at: i)
-            if byte <= 15 {
-                line.append(.init(string: "0"))
+        // First, remove all off-screen lines.
+        while let firstLine = lineLayers.first {
+            if firstLine.representingLine < fromLine {
+                firstLine.removeFromSuperlayer()
+                lineLayers.removeFirst()
+                recyclePool.append(firstLine)
+            } else {
+                break
             }
-            line.append(.init(string: .init(byte, radix: 16, uppercase: true)))
+        }
+        while let lastLine = lineLayers.last {
+            if lastLine.representingLine > toLine {
+                lastLine.removeFromSuperlayer()
+                lineLayers.removeLast()
+                recyclePool.append(lastLine)
+            } else {
+                break
+            }
+        }
+        
+        let lineHeight = drawingHelper.lineHeight
+        let gutterWidth = drawingHelper.gutterWidth
+        let viewportBounds = self.viewportBounds
+        
+        func addLineLayer(for line: Int, forwards: Bool = true) {
+            let lineLayer = recyclePool.isEmpty
+                ? _HexViewComponentLineLayer(drawingHelper: drawingHelper)
+                : recyclePool.removeLast()
             
-            // TODO: remove the hard-coded logic.
-            if line.length == 23 || line.length == 48 {
-                line.append(.init(string: "  "))
+            lineLayer.representingLine = line
+            lineLayer.loadData(from: dataProvider!)
+            if forwards {
+                lineLayers.append(lineLayer)
             } else {
-                line.append(.init(string: " "))
+                lineLayers.insert(lineLayer, at: 0)
             }
+            layer?.addSublayer(lineLayer)
         }
         
-        if line.length < 50 {
-            line.append(.init(string: .init(repeating: " ", count: 50 - line.length)))
+        func layoutLine(_ line: _HexViewComponentLineLayer) {
+            line.frame = .init(x: 0, y: lineHeight * CGFloat(line.representingLine),
+                               width: viewportBounds.width, height: lineHeight)
         }
         
-        for i in start...min(length - 1, end) {
-            let byte = dataProvider.byte(at: i)
-            if byte < 32 || byte >= 127 {
-                line.append(.init(string: "."))
-                specialIndexes.insert(line.length - 1)
-            } else {
-                line.append(.init(string: .init(Character(UnicodeScalar(byte)))))
+        // Then, append additional lines if needed.
+        // Forwards:
+        while true {
+            let lastLine = lineLayers.last?.representingLine ?? (fromLine - 1)
+            if lastLine >= toLine {
+                break
             }
+            addLineLayer(for: lastLine + 1)
+        }
+        // Backwards:
+        while true {
+            let firstLine = lineLayers.first?.representingLine ?? (toLine + 1)
+            if firstLine <= fromLine {
+                break
+            }
+            addLineLayer(for: firstLine - 1, forwards: false)
         }
         
-        var style: [NSAttributedString.Key : Any] = [
-            NSAttributedString.Key.font: drawingHelper.font!,
-            NSAttributedString.Key.foregroundColor: NSColor.textColor
-        ]
-        line.setAttributes(style, range: .init(location: 0, length: line.length))
-        
-        style[NSAttributedString.Key.foregroundColor] = specialCharacterColor
-        for specialIndex in specialIndexes {
-            line.setAttributes(style, range: .init(location: specialIndex, length: 1))
-        }
-        
-        return line
+        // All lines are added to the view, now layout them.
+        lineLayers.forEach { layoutLine($0) }
     }
     
     private func clampCursorPosition(_ position: HexViewDrawingHelper.Position) -> HexViewDrawingHelper.Position {
