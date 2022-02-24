@@ -80,6 +80,69 @@ public extension View {
     
 }
 
+#if os(iOS)
+fileprivate struct _AnimatedClickableIOSGestureView: UIViewRepresentable {
+    
+    struct Event {
+        let locationInView: CGPoint
+        let viewBounds: CGRect
+        let isEnded: Bool
+        let isCancelled: Bool
+    }
+    
+    class _UIView: UIView {
+        
+        var eventHandler: ((Event) -> ())?
+        
+        override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+            super.touchesBegan(touches, with: event)
+            handleEvent(with: touches, isEnded: false)
+        }
+        
+        override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+            super.touchesMoved(touches, with: event)
+            handleEvent(with: touches, isEnded: false)
+        }
+        
+        override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+            super.touchesEnded(touches, with: event)
+            handleEvent(with: touches, isEnded: true)
+        }
+        
+        override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
+            super.touchesCancelled(touches, with: event)
+            handleEvent(with: touches, isEnded: true, isCancelled: true)
+        }
+        
+        private func handleEvent(with touches: Set<UITouch>, isEnded: Bool, isCancelled: Bool = false) {
+            guard let locationInView = touches.first?.location(in: self) else {
+                return
+            }
+            eventHandler?(.init(
+                locationInView: locationInView,
+                viewBounds: bounds,
+                isEnded: isEnded,
+                isCancelled: isCancelled
+            ))
+        }
+        
+    }
+    
+    typealias UIViewType = _UIView
+    
+    let handler: (Event) -> ()
+    
+    func makeUIView(context: Context) -> _UIView {
+        return _UIView()
+    }
+    
+    func updateUIView(_ uiView: _UIView, context: Context) {
+        uiView.eventHandler = handler
+    }
+    
+}
+#endif
+
 private struct _AnimatedClickableView<V>: View where V: View {
     
     private let content: V
@@ -102,8 +165,40 @@ private struct _AnimatedClickableView<V>: View where V: View {
             .modifier(isPointInside
                 ? configuration.activeModifier
                 : configuration.identityModifier)
+        #if os(iOS)
+            .overlay(gestureView())
+        #else
             .highPriorityGesture(dragGesture())
+        #endif
     }
+    
+    #if os(iOS)
+    private func gestureView() -> some View {
+        return _AnimatedClickableIOSGestureView { event in
+            if event.isEnded && !event.isCancelled && isPointInside {
+                action()
+            }
+            
+            withAnimation(isPressed
+                          ? configuration.identityAnimation
+                          : configuration.activeAnimation) {
+                if event.isEnded {
+                    isPressed = false
+                    isPointInside = false
+                    return
+                }
+                
+                let activeZone = CGRect(origin: .zero, size: viewSize)
+                    .insetBy(dx: -24, dy: -24)
+                isPointInside = activeZone.contains(event.locationInView)
+            }
+            
+            if !event.isEnded {
+                isPressed = true
+            }
+        }
+    }
+    #endif
     
     private func dragGesture() -> some Gesture {
         DragGesture(minimumDistance: 0)
