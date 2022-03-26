@@ -6,8 +6,6 @@
 #if os(iOS)
 import UIKit
 
-extension UIWindow: CyanExtending { }
-
 public extension ExtensionNamespace where Object: UIWindow {
     
     var topViewController: UIViewController? {
