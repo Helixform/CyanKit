@@ -44,7 +44,7 @@ public extension PlatformColor {
     
     convenience init(lightColor: PlatformColor, darkColor: PlatformColor) {
         self.init(name: nil, dynamicProvider: { appearance in
-            if appearance.name == .darkAqua {
+            if appearance.userInterfaceStyle == .dark {
                 return darkColor
             } else {
                 return lightColor
