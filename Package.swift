@@ -22,5 +22,8 @@ let package = Package(
                 "CyanUtils",
                 "CyanUI",
             ]),
+        .testTarget(
+            name: "CyanExtensionsTests",
+            dependencies: ["CyanExtensions"])
     ]
 )
