@@ -7,28 +7,39 @@ import XCTest
 @testable import CyanExtensions
 
 @available(macOS 13.0, *)
-fileprivate func fakeAsyncTransformer(_ input: Int) async throws -> String {
+fileprivate func fakeAsyncTransformer(_ input: Int) async -> String {
     try? await Task.sleep(for: .milliseconds(10))
     return "\(input)"
+}
+
+@available(macOS 13.0, *)
+fileprivate func fakeAsyncTransformerThrows(_ input: Int) async throws -> String {
+    if input % 2 == 0 {
+        struct _DummyError: Error { }
+        throw _DummyError()
+    }
+    return await fakeAsyncTransformer(input)
 }
 
 @available(macOS 13.0, *)
 final class ConcurrencyAlgorithmsTests: XCTestCase {
     
     func testArrayMap() async {
+        // Test normal use case:
         let input = [1, 2, 3, 4]
-        do {
-            let result = try await input.map(fakeAsyncTransformer)
-            XCTAssertEqual(result, ["1", "2", "3", "4"])
-        } catch {
-            XCTAssert(false, error.localizedDescription)
-        }
+        let result = await input.mapAsync(fakeAsyncTransformer)
+        XCTAssertEqual(result, ["1", "2", "3", "4"])
         
+        // Test empty optimization:
+        let result2 = await [Int]().mapAsync(fakeAsyncTransformer)
+        XCTAssertEqual(result2, [])
+        
+        // Test error handling for transformer errors:
         do {
-            let result = try await [Int]().map(fakeAsyncTransformer)
-            XCTAssertEqual(result, [])
+            let _ = try await input.mapAsync(fakeAsyncTransformerThrows)
+            XCTFail("Should not reach here.")
         } catch {
-            XCTAssert(false, error.localizedDescription)
+            // Expected path.
         }
     }
     

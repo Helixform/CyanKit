@@ -17,23 +17,29 @@ extension Collection {
     /// - Returns: An array containing the transformed elements of this
     ///   sequence.
     @inlinable
-    public func map<T>(_ transform: (Element) async throws -> T) async rethrows -> [T] {
+    public func mapAsync<T>(_ transform: @escaping (Element) async throws -> T) async rethrows -> [T] {
         let n = self.count
         if n == 0 {
             return []
         }
         
-        var result = ContiguousArray<T>()
-        result.reserveCapacity(n)
-        
-        var i = self.startIndex
-        
-        for _ in 0..<n {
-            result.append(try await transform(self[i]))
-            formIndex(after: &i)
+        return try await withThrowingTaskGroup(of: (Int, T).self, returning: [T].self) { group in
+            for (index, elem) in self.enumerated() {
+                group.addTask {
+                    return (index, try await transform(elem))
+                }
+            }
+            
+            var sparseArray = [Int : T](minimumCapacity: n)
+            
+            for try await (index, resultElem) in group {
+                sparseArray[index] = resultElem
+            }
+            
+            return sparseArray
+                .sorted { lhs, rhs in lhs.key < rhs.key }
+                .map { $0.value }
         }
-        
-        return Array(result)
     }
     
 }
