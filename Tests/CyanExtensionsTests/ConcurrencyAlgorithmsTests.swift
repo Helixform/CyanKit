@@ -6,13 +6,13 @@
 import XCTest
 @testable import CyanExtensions
 
-@available(macOS 13.0, *)
+@available(macOS 13.0, iOS 16.0, *)
 fileprivate func fakeAsyncTransformer(_ input: Int) async -> String {
     try? await Task.sleep(for: .milliseconds(10))
     return "\(input)"
 }
 
-@available(macOS 13.0, *)
+@available(macOS 13.0, iOS 16.0, *)
 fileprivate func fakeAsyncTransformerThrows(_ input: Int) async throws -> String {
     if input % 2 == 0 {
         struct _DummyError: Error { }
@@ -21,7 +21,7 @@ fileprivate func fakeAsyncTransformerThrows(_ input: Int) async throws -> String
     return await fakeAsyncTransformer(input)
 }
 
-@available(macOS 13.0, *)
+@available(macOS 13.0, iOS 16.0, *)
 final class ConcurrencyAlgorithmsTests: XCTestCase {
     
     func testArrayMap() async {
