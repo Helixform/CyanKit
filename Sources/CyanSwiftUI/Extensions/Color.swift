@@ -4,6 +4,7 @@
 //
 
 import SwiftUI
+import CyanExtensions
 
 public extension Color {
     

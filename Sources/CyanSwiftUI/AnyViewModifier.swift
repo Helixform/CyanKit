@@ -4,7 +4,7 @@
 //
 
 import SwiftUI
-import CyanUtils
+import CyanExtensions
 
 public struct AnyViewModifier: ViewModifier {
     
