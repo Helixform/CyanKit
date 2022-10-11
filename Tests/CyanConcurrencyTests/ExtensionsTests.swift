@@ -4,7 +4,7 @@
 //
 
 import XCTest
-@testable import CyanExtensions
+@testable import CyanConcurrency
 
 @available(macOS 13.0, iOS 16.0, *)
 fileprivate func fakeAsyncTransformer(_ input: Int) async -> String {

@@ -5,4 +5,7 @@
 
 @_exported import CyanExtensions
 @_exported import CyanUtils
+@_exported import CyanCombine
+@_exported import CyanConcurrency
+@_exported import CyanSwiftUI
 @_exported import CyanUI

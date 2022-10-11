@@ -8,8 +8,8 @@
 import SwiftUI
 import AppKit
 import ObjectiveC
-import CyanUtils
 import Combine
+import CyanExtensions
 
 @available(macOS 12.0, *)
 public struct PopupButton<S>: View where S: StringProtocol {
