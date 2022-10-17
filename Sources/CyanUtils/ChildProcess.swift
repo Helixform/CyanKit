@@ -79,9 +79,6 @@ class ChildProcess {
                     }
                     
                     data.append(buffer.subdata(in: 0..<readCount))
-                    if readCount < buffer.count {
-                        break
-                    }
                 }
             })
             
@@ -111,6 +108,10 @@ class ChildProcess {
     }
     private var exitContinuations = [CheckedContinuation<Int, Error>]()
     private var processSource: DispatchSourceProcess?
+    
+    deinit {
+        // No-op
+    }
     
     init(builder: Builder) {
         self.executablePath = builder.executablePath
@@ -163,8 +164,8 @@ class ChildProcess {
         let processSource = DispatchSource.makeProcessSource(identifier: pid,
                                                              eventMask: [.exit, .signal],
                                                              queue: .main)
-        processSource.setEventHandler(handler: .init { [weak self] in
-            self?.handleProcessEvent()
+        processSource.setEventHandler(handler: .init {
+            self.handleProcessEvent()
         })
         processSource.resume()
         self.processSource = processSource
@@ -230,12 +231,12 @@ class ChildProcess {
         
         // Perform clean-ups.
         isRunning = false
-        processSource?.cancel()
-        processSource = nil
         let _ = stdinFileDescriptor.map { close($0) }
         stdinFileDescriptor = nil
         stdoutFDRefCount -= 1
         self.pid = nil
+        processSource?.cancel()
+        processSource = nil
     }
     
     private static func createPipe() throws -> (Int32, Int32) {
