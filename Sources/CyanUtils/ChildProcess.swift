@@ -38,59 +38,11 @@ class ChildProcess {
     let environment: [String : String]
     
     var stdoutStream: AsyncStream<Data>? {
-        guard let stdoutFileDescriptor = self.stdoutFileDescriptor else {
-            return nil
+        if _stdoutStream == nil {
+            attachStdoutStream()
         }
         
-        return AsyncStream(Data.self, bufferingPolicy: .unbounded) { cont in
-            self.stdoutFDRefCount += 1
-            let source = DispatchSource.makeReadSource(
-                fileDescriptor: stdoutFileDescriptor,
-                queue: .main)
-            source.setEventHandler(handler: .init {
-                var data = Data()
-                defer {
-                    if !data.isEmpty {
-                        cont.yield(data)
-                    }
-                }
-                while true {
-                    let bufferSize = 1024
-                    var buffer = Data(count: bufferSize)
-                    let readCount = buffer.withUnsafeMutableBytes { pointer in
-                        return read(stdoutFileDescriptor, pointer.baseAddress, bufferSize)
-                    }
-                    
-                    // Handle end-of-file or interruption.
-                    if readCount <= 0 {
-                        if errno == EINTR {
-                            continue
-                        } else if errno == EAGAIN {
-                            if !self.isRunning {
-                                // No data available and the process is terminated,
-                                // there will not be data produced anymore.
-                                cont.finish()
-                            }
-                        } else {
-                            // Other error occurred, just close the stream.
-                            cont.finish()
-                        }
-                        return
-                    }
-                    
-                    data.append(buffer.subdata(in: 0..<readCount))
-                }
-            })
-            
-            cont.onTermination = { _ in
-                source.cancel()
-                DispatchQueue.main.async {
-                    self.stdoutFDRefCount -= 1
-                }
-            }
-            
-            source.resume()
-        }
+        return _stdoutStream
     }
     
     private(set) var isRunning = false
@@ -108,6 +60,9 @@ class ChildProcess {
     }
     private var exitContinuations = [CheckedContinuation<Int, Error>]()
     private var processSource: DispatchSourceProcess?
+    
+    private var _stdoutStream: AsyncStream<Data>?
+    private var readSource: DispatchSourceRead?
     
     deinit {
         // No-op
@@ -134,6 +89,10 @@ class ChildProcess {
         
         let stdinPipeFds = try Self.createPipe()
         let stdoutPipeFds = try Self.createPipe()
+        defer {
+            close(stdinPipeFds.0)
+            close(stdoutPipeFds.1)
+        }
         
         posix_spawn_file_actions_adddup2(&fileActions, stdinPipeFds.0, STDIN_FILENO)
         posix_spawn_file_actions_addclose(&fileActions, stdinPipeFds.0)
@@ -173,8 +132,6 @@ class ChildProcess {
         stdinFileDescriptor = stdinPipeFds.1
         stdoutFileDescriptor = stdoutPipeFds.0
         stdoutFDRefCount = 1
-        close(stdinPipeFds.0)
-        close(stdoutPipeFds.1)
         self.pid = pid
         isRunning = true
     }
@@ -237,6 +194,69 @@ class ChildProcess {
         self.pid = nil
         processSource?.cancel()
         processSource = nil
+    }
+    
+    private func attachStdoutStream() {
+        guard let stdoutFileDescriptor = self.stdoutFileDescriptor else {
+            return
+        }
+        
+        _stdoutStream = AsyncStream(Data.self, bufferingPolicy: .unbounded) { cont in
+            self.stdoutFDRefCount += 1
+            let source = DispatchSource.makeReadSource(
+                fileDescriptor: stdoutFileDescriptor,
+                queue: .main)
+            source.setEventHandler(handler: .init {
+                var data = Data()
+                defer {
+                    if !data.isEmpty {
+                        cont.yield(data)
+                    }
+                }
+                while true {
+                    let bufferSize = 1024
+                    var buffer = Data(count: bufferSize)
+                    let readCount = buffer.withUnsafeMutableBytes { pointer in
+                        return read(stdoutFileDescriptor, pointer.baseAddress, bufferSize)
+                    }
+                    
+                    // Handle end-of-file or interruption.
+                    if readCount <= 0 {
+                        if errno == EINTR {
+                            continue
+                        } else if errno == EAGAIN {
+                            if !self.isRunning {
+                                // No data available and the process is terminated,
+                                // there will not be data produced anymore.
+                                cont.finish()
+                            }
+                        } else {
+                            // Other error occurred, just close the stream.
+                            cont.finish()
+                        }
+                        return
+                    }
+                    
+                    data.append(buffer.subdata(in: 0..<readCount))
+                }
+            })
+            
+            cont.onTermination = { _ in
+                DispatchQueue.main.async {
+                    self.closeStdoutStream()
+                }
+            }
+            
+            source.resume()
+            self.readSource = source
+        }
+    }
+    
+    private func closeStdoutStream() {
+        readSource?.cancel()
+        readSource = nil
+        _stdoutStream = nil
+        stdoutFDRefCount -= 1
     }
     
     private static func createPipe() throws -> (Int32, Int32) {
