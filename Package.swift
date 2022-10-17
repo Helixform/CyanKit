@@ -28,6 +28,10 @@ let package = Package(
                 "CyanSwiftUI",
                 "CyanUI",
             ]),
+        
+        .testTarget(
+            name: "CyanUtilsTests",
+            dependencies: ["CyanUtils"]),
         .testTarget(
             name: "CyanConcurrencyTests",
             dependencies: ["CyanConcurrency"])
