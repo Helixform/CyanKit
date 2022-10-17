@@ -5,6 +5,7 @@
 
 import Foundation
 
+#if os(macOS)
 @MainActor
 class ChildProcess {
     
@@ -268,3 +269,4 @@ class ChildProcess {
     }
     
 }
+#endif
