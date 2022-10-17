@@ -6,6 +6,7 @@
 import XCTest
 @testable import CyanUtils
 
+#if os(macOS)
 @MainActor
 final class ChildProcessTests: XCTestCase {
     
@@ -74,8 +75,12 @@ final class ChildProcessTests: XCTestCase {
             return
         }
         
-        let exitCode = try await childProcess.waitUntilExit()
-        XCTAssertEqual(exitCode, 0)
+        do {
+            let exitCode = try await childProcess.waitUntilExit()
+            XCTAssertEqual(exitCode, 0)
+        } catch {
+            // It's ok to get some signals that killed the process.
+        }
         
         var totalReadCount = 0
         for await stdoutData in stdoutStream {
@@ -85,3 +90,4 @@ final class ChildProcessTests: XCTestCase {
     }
     
 }
+#endif
