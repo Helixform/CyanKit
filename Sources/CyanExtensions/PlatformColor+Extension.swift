@@ -33,20 +33,21 @@ public extension PlatformColor {
                   alpha: alpha)
     }
     
-    convenience init(hex: String) {
-        var cString: String = hex.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+    convenience init?(hexString: String) {
+        var trimmedHexString = hexString.trimmingCharacters(in: .whitespacesAndNewlines)
         
-        if (cString.hasPrefix("#")) {
-            cString.remove(at: cString.startIndex)
+        if trimmedHexString.hasPrefix("#") {
+            trimmedHexString.remove(at: trimmedHexString.startIndex)
         }
         
-        if ((cString.count) != 6) {
-            self.init()
-            return
+        guard trimmedHexString.count == 6 else {
+            return nil
         }
         
         var rgbValue: UInt64 = 0
-        Scanner(string: cString).scanHexInt64(&rgbValue)
+        guard Scanner(string: trimmedHexString).scanHexInt64(&rgbValue) else {
+            return nil
+        }
         
         self.init(
             red: CGFloat((rgbValue & 0xFF0000) >> 16) / 255.0,
