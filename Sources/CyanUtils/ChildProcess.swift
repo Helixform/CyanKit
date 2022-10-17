@@ -7,7 +7,7 @@ import Foundation
 
 #if os(macOS)
 @MainActor
-class ChildProcess {
+final class ChildProcess {
     
     struct Builder {
         
@@ -241,7 +241,7 @@ class ChildProcess {
                 }
             })
             
-            cont.onTermination = { _ in
+            cont.onTermination = { @Sendable _ in
                 DispatchQueue.main.async {
                     self.closeStdoutStream()
                 }
@@ -290,4 +290,6 @@ class ChildProcess {
     }
     
 }
+
+extension ChildProcess: Sendable { }
 #endif
