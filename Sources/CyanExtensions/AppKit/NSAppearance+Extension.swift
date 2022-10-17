@@ -4,6 +4,7 @@
 //
 
 #if canImport(AppKit)
+
 import AppKit
 
 public enum UserInterfaceStyle {
@@ -24,4 +25,5 @@ public extension NSAppearance {
     }
     
 }
+
 #endif
