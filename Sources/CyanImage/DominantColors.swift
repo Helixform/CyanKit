@@ -17,7 +17,6 @@ extension CIImage {
         kMeansFilter.setValue(CIVector(cgRect: self.extent), forKey: kCIInputExtentKey)
         kMeansFilter.setValue(clusterCount, forKey: "inputCount")
         kMeansFilter.setValue(20, forKey: "inputPasses")
-//        kMeansFilter.setValue(NSNumber(value: true), forKey: "inputPerceptual")
         
         guard var outputImage = kMeansFilter.outputImage else {
             return []
