@@ -13,7 +13,7 @@ let package = Package(
     ],
     targets: [
         .target(name: "CyanExtensions"),
-        .target(name: "CyanUtils"),
+        .target(name: "CyanUtils", dependencies: ["CCyanUtils"]),
         .target(name: "CyanCombine"),
         .target(name: "CyanConcurrency"),
         .target(name: "CyanSwiftUI", dependencies: ["CyanExtensions"]),
@@ -28,6 +28,8 @@ let package = Package(
                 "CyanSwiftUI",
                 "CyanUI",
             ]),
+        
+        .target(name: "CCyanUtils"),
         
         .testTarget(
             name: "CyanUtilsTests",
