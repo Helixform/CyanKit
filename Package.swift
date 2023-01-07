@@ -18,6 +18,7 @@ let package = Package(
         .target(name: "CyanConcurrency"),
         .target(name: "CyanSwiftUI", dependencies: ["CyanExtensions"]),
         .target(name: "CyanUI", dependencies: ["CyanSwiftUI"]),
+        .target(name: "CyanSPI"),
         .target(
             name: "CyanKit",
             dependencies: [
