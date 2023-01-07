@@ -7,25 +7,25 @@ import Foundation
 
 #if os(macOS)
 @MainActor
-final class ChildProcess {
+public final class ChildProcess {
     
-    struct Builder {
+    public struct Builder {
         
-        let executablePath: String
-        var arguments = [String]()
-        var environment = [String : String]()
+        public let executablePath: String
+        public var arguments = [String]()
+        public var environment = [String : String]()
         
-        init(executablePath: String) {
+        public init(executablePath: String) {
             self.executablePath = executablePath
         }
         
-        func addArgument(_ argument: String) -> Builder {
+        public func addArgument(_ argument: String) -> Builder {
             var newBuilder = self
             newBuilder.arguments.append(argument)
             return newBuilder
         }
         
-        func addEnvironmentVariable(_ value: String, forKey key: String) -> Builder {
+        public func addEnvironmentVariable(_ value: String, forKey key: String) -> Builder {
             var newBuilder = self
             newBuilder.environment[key] = value
             return newBuilder
@@ -33,11 +33,11 @@ final class ChildProcess {
         
     }
     
-    let executablePath: String
-    let arguments: [String]
-    let environment: [String : String]
+    public let executablePath: String
+    public let arguments: [String]
+    public let environment: [String : String]
     
-    var stdoutStream: AsyncStream<Data>? {
+    public var stdoutStream: AsyncStream<Data>? {
         if _stdoutStream == nil {
             attachStdoutStream()
         }
@@ -68,13 +68,13 @@ final class ChildProcess {
         // No-op
     }
     
-    init(builder: Builder) {
+    public init(builder: Builder) {
         self.executablePath = builder.executablePath
         self.arguments = builder.arguments
         self.environment = builder.environment
     }
     
-    func start() throws {
+    public func start() throws {
         guard !isRunning else {
             return
         }
@@ -136,7 +136,7 @@ final class ChildProcess {
         isRunning = true
     }
     
-    func waitUntilExit() async throws -> Int {
+    public func waitUntilExit() async throws -> Int {
         guard isRunning else {
             throw AnyError(message: "Child process is not running")
         }
@@ -291,5 +291,5 @@ final class ChildProcess {
     
 }
 
-extension ChildProcess: Sendable { }
+public extension ChildProcess: Sendable { }
 #endif
