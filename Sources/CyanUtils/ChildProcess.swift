@@ -291,5 +291,5 @@ public final class ChildProcess {
     
 }
 
-public extension ChildProcess: Sendable { }
+extension ChildProcess: Sendable { }
 #endif
