@@ -5,18 +5,18 @@
 
 import Foundation
 
-class AnyError: NSError {
+public class AnyError: NSError {
     
-    let message: String?
+    public let message: String?
     
-    init(message: String, code: Int = -1, domain: String? = nil) {
+    public init(message: String, code: Int = -1, domain: String? = nil) {
         self.message = message
         super.init(domain: domain ?? "", code: code, userInfo: [
             NSLocalizedDescriptionKey: message
         ])
     }
     
-    required init?(coder: NSCoder) {
+    public required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
