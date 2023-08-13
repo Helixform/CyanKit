@@ -12,9 +12,12 @@ import ObjectiveC
 
 @available(iOS 15.0, *)
 public struct EditMenuModifier: ViewModifier {
+    /// A rectangle with edges moved outwards by the given insets.
+    private let insets: UIEdgeInsets
     private let items: () -> [EditMenuAction]
     
-    public init(@ArrayBuilder<EditMenuAction> items: @escaping () -> [EditMenuAction]) {
+    public init(insets: UIEdgeInsets = .zero, @ArrayBuilder<EditMenuAction> items: @escaping () -> [EditMenuAction]) {
+        self.insets = insets
         self.items = items
     }
     
@@ -37,7 +40,7 @@ public struct EditMenuModifier: ViewModifier {
                         guard let keyWindow = UIApplication.shared.cyan.keyWindow else {
                             return
                         }
-                        dummyView.frame = proxy.frame(in: .global)
+                        dummyView.frame = proxy.frame(in: .global).inflate(by: insets)
                         dummyView.actionHandler = { [unowned dummyView] index in
                             defer { dummyView.resignFirstResponder() }
                             if index >= items.count { return }
@@ -155,8 +158,8 @@ public struct EditMenuAction {
 
 @available(iOS 15.0, *)
 public extension View {
-    func editMenu(@ArrayBuilder<EditMenuAction> _ actions: @escaping () -> [EditMenuAction]) -> some View {
-        modifier(EditMenuModifier(items: actions))
+    func editMenu(insets: UIEdgeInsets = .zero, @ArrayBuilder<EditMenuAction> _ actions: @escaping () -> [EditMenuAction]) -> some View {
+        modifier(EditMenuModifier(insets: insets, items: actions))
     }
 }
 #endif
