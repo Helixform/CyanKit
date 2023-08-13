@@ -3,7 +3,7 @@
 //  Copyright (c) 2021 Cyandev. All rights reserved.
 //
 
-#if canImport(AppKit)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
 
 import AppKit
 
