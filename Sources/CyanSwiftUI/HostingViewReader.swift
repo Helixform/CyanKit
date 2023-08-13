@@ -61,6 +61,7 @@ public struct HostingViewReader<Content>: ViewRepresentable where Content: View 
             hostingView.translatesAutoresizingMaskIntoConstraints = false
             
             super.init(frame: frame)
+            hostingView.backgroundColor = .clear
             
             addSubview(hostingView)
             NSLayoutConstraint.activate([
