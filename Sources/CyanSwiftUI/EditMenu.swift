@@ -89,6 +89,8 @@ public struct EditMenuModifier: ViewModifier {
             fatalError("init(coder:) has not been implemented")
         }
         
+        override var canBecomeFirstResponder: Bool { true }
+        
         class func willRespond(to selector: Selector) -> Bool {
             NSStringFromSelector(selector).hasPrefix(selectorPrefix)
         }
