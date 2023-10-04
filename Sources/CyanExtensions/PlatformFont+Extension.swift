@@ -3,7 +3,7 @@
 //  Copyright (c) 2022 ktiays. All rights reserved.
 // 
 
-#if os(iOS)
+#if canImport(UIKit)
 import UIKit
 public typealias PlatformFont = UIFont
 #else

@@ -167,7 +167,7 @@ private struct _AnimatedClickableView<V>: View where V: View {
                 : configuration.identityModifier)
         #if os(iOS)
             .overlay(gestureView())
-        #else
+        #elseif os(macOS)
             .highPriorityGesture(dragGesture())
         #endif
     }
@@ -200,6 +200,7 @@ private struct _AnimatedClickableView<V>: View where V: View {
     }
     #endif
     
+    #if os(macOS)
     private func dragGesture() -> some Gesture {
         DragGesture(minimumDistance: 0)
             .onChanged { value in
@@ -222,6 +223,7 @@ private struct _AnimatedClickableView<V>: View where V: View {
                 }
             }
     }
+    #endif
     
     private func sizeReader() -> some View {
         GeometryReader { proxy in
