@@ -3,7 +3,7 @@
 //  Copyright (c) 2022 ktiays. All rights reserved.
 //
 
-#if canImport(UIKit)
+#if os(iOS) || targetEnvironment(macCatalyst)
 
 import UIKit
 import SwiftUI

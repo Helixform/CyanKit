@@ -9,8 +9,8 @@ import CyanExtensions
 public extension Color {
     
     init(platformColor: PlatformColor) {
-        #if os(iOS)
-        if #available(iOS 15.0, *) {
+        #if canImport(UIKit)
+        if #available(iOS 15.0, tvOS 15.0, *) {
             self.init(uiColor: platformColor)
         } else {
             self.init(platformColor)
@@ -63,11 +63,11 @@ public extension Color {
     static let systemTeal: Color = .init(platformColor: .systemTeal)
     
     /// A context-dependent cyan color that automatically adapts to the current trait environment.
-    @available(iOS 15.0, macOS 12.0, *)
+    @available(iOS 15.0, macOS 12.0, tvOS 15.0, *)
     static let systemCyan: Color = .init(platformColor: .systemCyan)
     
     /// A context-dependent mint color that automatically adapts to the current trait environment.
-    @available(iOS 15.0, macOS 12.0, *)
+    @available(iOS 15.0, macOS 12.0, tvOS 15.0, *)
     static let systemMint: Color = .init(platformColor: .systemMint)
     
     
@@ -76,7 +76,7 @@ public extension Color {
     /// A context-dependent gray color that automatically adapts to the current trait environment.
     static let systemGray: Color = .init(platformColor: .systemGray)
     
-    #if canImport(UIKit)
+    #if canImport(UIKit) && !os(tvOS)
     
     /// A second-level shade of gray that adapts to the environment.
     ///

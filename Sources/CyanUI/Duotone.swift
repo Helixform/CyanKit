@@ -6,7 +6,7 @@
 import SwiftUI
 import CyanExtensions
 
-@available(iOS 15.0, macOS 12.0, *)
+@available(iOS 15.0, macOS 12.0, tvOS 15.0, *)
 public protocol DuotoneIconStyle {
     
     typealias Configuration = DuotoneIconConfiguration
@@ -17,14 +17,14 @@ public protocol DuotoneIconStyle {
     
 }
 
-@available(iOS 15.0, macOS 12.0, *)
+@available(iOS 15.0, macOS 12.0, tvOS 15.0, *)
 public struct DuotoneIconConfiguration {
     public let context: GraphicsContext
     public let bounds: CGRect
     public let isHighlighted: Bool
 }
 
-@available(iOS 15.0, macOS 12.0, *)
+@available(iOS 15.0, macOS 12.0, tvOS 15.0, *)
 public struct IconColorConfiguration {
     public let primaryColor: Color
     public let highlightPrimaryColor: Color
@@ -46,7 +46,7 @@ public struct IconColorConfiguration {
     }
 }
 
-@available(iOS 15.0, macOS 12.0, *)
+@available(iOS 15.0, macOS 12.0, tvOS 15.0, *)
 public struct IconColorConfigurationKey: EnvironmentKey {
     public static var defaultValue: IconColorConfiguration? {
         let primaryColor: Color = .init(lightColor: .label, darkColor: .white)
@@ -56,7 +56,7 @@ public struct IconColorConfigurationKey: EnvironmentKey {
     }
 }
 
-@available(iOS 15.0, macOS 12.0, *)
+@available(iOS 15.0, macOS 12.0, tvOS 15.0, *)
 public extension EnvironmentValues {
     var iconColorConfiguration: IconColorConfiguration? {
         get { self[IconColorConfigurationKey.self] }
@@ -64,7 +64,7 @@ public extension EnvironmentValues {
     }
 }
 
-@available(iOS 15.0, macOS 12.0, *)
+@available(iOS 15.0, macOS 12.0, tvOS 15.0, *)
 public struct DuotoneIcon<S>: View where S: DuotoneIconStyle {
     
     @Environment(\.iconColorConfiguration) var iconColorConfiguration

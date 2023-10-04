@@ -3,6 +3,8 @@
 //  Copyright (c) 2021 ktiays. All rights reserved.
 //  
 
+#if os(iOS) || targetEnvironment(macCatalyst)
+
 import SwiftUI
 import CyanExtensions
 
@@ -179,3 +181,5 @@ struct SegmentedControl_Previews: PreviewProvider {
         PreviewView()
     }
 }
+
+#endif
