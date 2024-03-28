@@ -10,6 +10,9 @@ let package = Package(
         .library(
             name: "CyanKit",
             targets: ["CyanKit"]),
+        .library(
+            name: "CyanUtils",
+            targets: ["CyanUtils"]),
     ],
     targets: [
         .target(name: "CyanExtensions"),
