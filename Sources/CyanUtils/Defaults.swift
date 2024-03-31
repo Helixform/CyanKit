@@ -11,21 +11,35 @@ public protocol ConstructibleFromDefaults {
     static func from(_ defaults: UserDefaults, with key: String) -> Self?
 }
 
+private func getPrimitiveDefaultsValue<T>(of type: T.Type,
+                                          from defaults: UserDefaults,
+                                          with key: String,
+                                          objCType: String) -> T? {
+    guard let number = defaults.object(forKey: key) as? NSNumber else {
+        return nil
+    }
+    let actualObjCType = String(cString: number.objCType)
+    guard objCType == actualObjCType else {
+        return nil
+    }
+    return number as? T
+}
+
 extension Int: ConstructibleFromDefaults {
     public static func from(_ defaults: UserDefaults, with key: String) -> Self? {
-        defaults.integer(forKey: key)
+        return getPrimitiveDefaultsValue(of: Int.self, from: defaults, with: key, objCType: "q")
     }
 }
 
 extension Float: ConstructibleFromDefaults {
     public static func from(_ defaults: UserDefaults, with key: String) -> Float? {
-        defaults.float(forKey: key)
+        return getPrimitiveDefaultsValue(of: Float.self, from: defaults, with: key, objCType: "f")
     }
 }
 
 extension Double: ConstructibleFromDefaults {
     public static func from(_ defaults: UserDefaults, with key: String) -> Double? {
-        defaults.double(forKey: key)
+        return getPrimitiveDefaultsValue(of: Double.self, from: defaults, with: key, objCType: "d")
     }
 }
 
@@ -37,7 +51,7 @@ extension String: ConstructibleFromDefaults {
 
 extension Bool: ConstructibleFromDefaults {
     public static func from(_ defaults: UserDefaults, with key: String) -> Self? {
-        defaults.bool(forKey: key)
+        return getPrimitiveDefaultsValue(of: Bool.self, from: defaults, with: key, objCType: "c")
     }
 }
 
