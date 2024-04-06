@@ -11,6 +11,10 @@ public protocol ConstructibleFromDefaults {
     static func from(_ defaults: UserDefaults, with key: String) -> Self?
 }
 
+public protocol DefaultsWriting {
+    func write(to defaults: UserDefaults, with key: String)
+}
+
 private func getPrimitiveDefaultsValue<T>(of type: T.Type,
                                           from defaults: UserDefaults,
                                           with key: String,
@@ -105,7 +109,12 @@ public struct Defaults<T> where T: ConstructibleFromDefaults {
         }
         
         nonmutating set {
-            UserDefaults.standard.set(newValue, forKey: key)
+            let userDefaults = UserDefaults.standard
+            if let customWriting = newValue as? DefaultsWriting {
+                customWriting.write(to: userDefaults, with: key)
+            } else {
+                userDefaults.set(newValue, forKey: key)
+            }
         }
     }
     
