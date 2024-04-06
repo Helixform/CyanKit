@@ -74,13 +74,15 @@ public struct Defaults<T> where T: ConstructibleFromDefaults {
     }
     private let `default`: () -> T
     
+    @available(*, deprecated, renamed: "init(key:defaultValue:)", message: "Use init(key:defaultValue:) instead")
     public init(key: String, default: @escaping () -> T) {
         self.key = key
         self.default = `default`
     }
     
-    public init(key: String, defaultValue: T) {
-        self.init(key: key) { defaultValue }
+    public init(key: String, defaultValue: @autoclosure @escaping () -> T) {
+        self.key = key
+        self.default = defaultValue
     }
     
     public var wrappedValue: T {
